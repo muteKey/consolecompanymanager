@@ -25,6 +25,10 @@ class MenuController:
     def validate_input(self, user_input):
         return user_input.strip().lower()
 
+    def handle_command(self, command):
+        if command == Command.select_department_command():
+            print()
+
     def get_view_for_command(self, command):
         if command == Command.select_department_command():
             commands = [Command.list_employee_command(),
@@ -38,3 +42,5 @@ class MenuController:
                         Command.select_department_command(),
                         Command.quit_command()]
             return MenuView(MenuItem.DepartmentSelection, commands)
+        elif command == Command.edit_employee_command():
+
