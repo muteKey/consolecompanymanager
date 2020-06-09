@@ -1,0 +1,9 @@
+name,description,syntax,parent_id
+add_department,adds new department into db,add_department department_name,,
+select_department,selects department with specified name,select_department department_id,,
+list_department,displays all existing departments,list_department,,
+list_employee,show list of employees in dep,list_employee,2,
+add_employee,adds new employee to selected dep,add_employee employee_name employee_lastname,2,
+delete_employee,removes employee by id,delete_employee employee_id,2,
+edit_employee,editing employee profile, edit_employee employee_id employee_name employee_lastname,2,
+back,move back to previous menu,,2,
