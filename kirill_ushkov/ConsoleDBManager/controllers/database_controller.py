@@ -1,6 +1,7 @@
 import sqlite3
 from contextlib import closing
 from ..models.menu_item import MenuItem
+from ..models.department import Department
 import csv
 import os
 
@@ -131,3 +132,20 @@ class DatabaseController:
             item = MenuItem(row[0], row[1], row[2], row[3], row[4])
             children.append(item)
         return children
+
+    def get_all_departments(self):
+        query = """
+            SELECT * FROM department
+        """
+        cursor = self.get_connection().cursor()
+        cursor.execute(query)
+
+        children = []
+
+        for row in cursor.fetchall():
+            item = Department(row[0], row[1])
+            children.append(item)
+        return children
+
+
+

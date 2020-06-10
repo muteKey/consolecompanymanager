@@ -1,3 +1,15 @@
+from enum import Enum
+
+
+class Command(Enum):
+    ADD_DEPARTMENT = "add_department"
+    SELECT_DEPARTMENT = "select_department"
+    LIST_DEPARTMENT = "list_department"
+    LIST_EMPLOYEE = "list_employee"
+    ADD_EMPLOYEE = "add_employee"
+    DELETE_EMPLOYEE = "delete_employee"
+    EDIT_EMPLOYEE = "edit_employee"
+    BACK = "back"
 
 
 class MenuItem:

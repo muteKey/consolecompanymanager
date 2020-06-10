@@ -1,4 +1,4 @@
 from ConsoleDBManager.controllers.menu_controller import MenuController
+from ConsoleDBManager.views.views import MenuInitialView
 
-menuController = MenuController()
-menuController.start_lifecycle()
+menuController = MenuController(MenuInitialView())
