@@ -109,7 +109,7 @@ class DatabaseController:
 
     def get_selected_menu_item(self, user_input):
         query = """
-            SELECT * FROM menu_item WHERE id = ?
+            SELECT * FROM menu_item WHERE id = ?;
         """
         cursor = self.get_connection().cursor()
         cursor.execute(query, user_input)
@@ -121,10 +121,10 @@ class DatabaseController:
 
     def get_child_menu_items(self, menu_item_id):
         query = """
-            SELECT * FROM menu_item WHERE parent_id = ?
+            SELECT * FROM menu_item WHERE parent_id = ?;
         """
         cursor = self.get_connection().cursor()
-        cursor.execute(query, str(menu_item_id))
+        cursor.execute(query, (menu_item_id,))
 
         children = []
 
@@ -135,7 +135,7 @@ class DatabaseController:
 
     def get_all_departments(self):
         query = """
-            SELECT * FROM department
+            SELECT * FROM department;
         """
         cursor = self.get_connection().cursor()
         cursor.execute(query)
@@ -146,6 +146,37 @@ class DatabaseController:
             item = Department(row[0], row[1])
             children.append(item)
         return children
+
+    def add_department(self, dep_name):
+        query = """
+            INSERT INTO department('name') VALUES (?);
+        """
+        conn = self.get_connection()
+
+        with closing(conn):
+            with conn:
+                conn.execute(query, (dep_name,))
+
+    def get_department_by_name(self, dep_name):
+        query = """
+            SELECT * FROM department WHERE name LIKE ?;
+        """
+        conn = self.get_connection()
+        departments = []
+        with closing(conn):
+            with conn:
+                cursor = self.get_connection().cursor()
+                cursor.execute(query, (dep_name,))
+                for row in cursor.fetchall():
+                    item = Department(row[0], row[1])
+                    departments.append(item)
+        return departments
+
+
+
+
+
+
 
 
 
