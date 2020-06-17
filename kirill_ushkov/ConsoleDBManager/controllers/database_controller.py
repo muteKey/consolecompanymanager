@@ -31,15 +31,26 @@ class DatabaseController:
                 name TEXT
             );
         """
+        create_employee_query = """
+            CREATE TABLE IF NOT EXISTS employee(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                first_name TEXT,
+                last_name TEXT,
+                position TEXT,
+                department_id INTEGER,
+                FOREIGN KEY(department_id) REFERENCES department(id)
+            );
+        """
 
         conn = self.get_connection()
-        queries = [create_menu_query, create_dep_query]
+        queries = [create_menu_query, create_dep_query, create_employee_query]
         with closing(conn):
             with conn:
                 for query in queries:
                     conn.execute(query)
         self.fill_menu_table()
         self.fill_dep_table()
+        self.fill_employee_table()
 
     def fill_menu_table(self):
         menu_create_query = """
@@ -60,6 +71,25 @@ class DatabaseController:
                     parent_id = None
                 params = (row["name"], row["description"], row["syntax"], parent_id)
                 cursor.execute(menu_create_query, params)
+                conn.commit()
+        conn.close()
+
+    def fill_employee_table(self):
+        employee_fill_query = """
+            INSERT INTO employee('first_name','last_name','position','department_id') VALUES (?,?,?,?) 
+        """
+        this_folder = os.path.dirname(os.path.abspath(__file__))
+        initial_menu_file = os.path.join(this_folder, 'initial_employees.csv')
+
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        with open(initial_menu_file, 'r') as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                params = (row["first_name"], row["last_name"], row["position"], row["department_id"])
+                print(params)
+                cursor.execute(employee_fill_query, params)
                 conn.commit()
         conn.close()
 
@@ -107,12 +137,12 @@ class DatabaseController:
             menu_items.append(item)
         return menu_items
 
-    def get_selected_menu_item(self, user_input):
+    def get_selected_menu_item(self, command_name):
         query = """
-            SELECT * FROM menu_item WHERE id = ?;
+            SELECT * FROM menu_item WHERE name = ?;
         """
         cursor = self.get_connection().cursor()
-        cursor.execute(query, user_input)
+        cursor.execute(query, (command_name,))
         row = cursor.fetchone()
         if row is not None:
             item = MenuItem(row[0], row[1], row[2], row[3], row[4])
@@ -162,15 +192,12 @@ class DatabaseController:
             SELECT * FROM department WHERE name LIKE ?;
         """
         conn = self.get_connection()
-        departments = []
         with closing(conn):
             with conn:
                 cursor = self.get_connection().cursor()
                 cursor.execute(query, (dep_name,))
-                for row in cursor.fetchall():
-                    item = Department(row[0], row[1])
-                    departments.append(item)
-        return departments
+                row = cursor.fetchone()
+                return Department(row[0], row[1])
 
 
 

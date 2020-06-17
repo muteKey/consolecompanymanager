@@ -21,10 +21,10 @@ class MenuItem:
         self.syntax = syntax
 
     def text_description(self):
-        return "{} {} {}".format(self.id, self.name, self.description)
+        return "{} {}".format(self.id, self.name, self.description)
 
     def visual_representation(self):
-        return "{} - {}".format(self.id, self.description)
+        return "{} - {} - {}".format(self.name, self.syntax, self.description)
 
     def __str__(self):
         return self.text_description()

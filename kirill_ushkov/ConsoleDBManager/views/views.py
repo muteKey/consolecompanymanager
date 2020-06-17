@@ -1,7 +1,8 @@
 from ..controllers.menu_controller import View
 from ..models.menu_item import Command
-from ..validators.validators import AddNewDepartmentCommandValidator, SelectDepartmentCommandValidator
+from ..validators.validators import CommandValidator
 from ..validators.errors import CommandMismatchError, CommandSyntaxError, TooShortDepartmentNameError
+from ..parsers.command_parser import CommandParser
 
 
 class MenuInitialView(View):
@@ -13,12 +14,14 @@ class MenuInitialView(View):
             print(command.visual_representation())
 
     def get_user_input(self):
-        user_input = input("Please enter number of command:\n")
+        user_input = input("Please enter command:\n")
         return user_input.strip().lower()
 
     def handle_user_input(self, user_input):
-        menu_item = self.controller.dbController.get_selected_menu_item(user_input)
-        if menu_item is not None:
+        try:
+            parser = CommandParser(user_input)
+            commands = parser.parse()
+            menu_item = self.controller.dbController.get_selected_menu_item(commands[0])
             if menu_item.name == Command.LIST_DEPARTMENT.value:
                 view = DepartmentListView()
                 self.controller.transition_to(view)
@@ -26,11 +29,10 @@ class MenuInitialView(View):
                 view = AddNewDepartmentView(menu_item)
                 self.controller.transition_to(view)
             elif menu_item.name == Command.SELECT_DEPARTMENT.value:
-                view = SelectDepartmentView(menu_item)
+                department = self.controller.dbController.get_department_by_name(commands[1])
+                view = SelectedDepartmentMenuView(menu_item, department)
                 self.controller.transition_to(view)
-            else:
-                self.show_error()
-        else:
+        except CommandSyntaxError:
             self.show_error()
 
     def show_error(self):
@@ -71,7 +73,7 @@ class AddNewDepartmentView(View):
     def handle_user_input(self, user_input):
         cleared = user_input.strip()
         try:
-            validator = AddNewDepartmentCommandValidator()
+            validator = CommandValidator(Command.ADD_DEPARTMENT)
             dep_name = validator.validate(cleared)
             self.controller.dbController.add_department(dep_name)
 
@@ -94,38 +96,14 @@ class AddNewDepartmentView(View):
         print("Incorrect command syntax!")
 
 
-class SelectDepartmentView(View):
-
-    def __init__(self, menu_item):
-        self.menu_item = menu_item
-
-    def start(self):
-        print(self.menu_item.description)
-        print("Command syntax is {}".format(self.menu_item.syntax))
-
-    def handle_user_input(self, user_input):
-        validator = SelectDepartmentCommandValidator()
-        dep_name = validator.validate(user_input)
-        departments = self.controller.dbController.get_department_by_name(dep_name)
-        if len(departments) == 0:
-            print("Cannot find department with this name")
-            print(user_input)
-        else:
-            view = SelectedDepartmentMenuView(departments[0])
-            self.controller.transition_to(view)
-
-    def get_user_input(self):
-        return input("Enter command:\n")
-
-    def show_error(self):
-        pass
-
-
 class SelectedDepartmentMenuView(View):
-    def __init__(self, item):
-        self.parent_menu_item = item
+    def __init__(self, menu_item, department):
+        self.department = department
+        self.parent_menu_item = menu_item
 
     def start(self):
+        print("Selected department - {}".format(self.department.name))
+        print("Available commands")
         menu_items = self.controller.dbController.get_child_menu_items(self.parent_menu_item.id)
         for item in menu_items:
             print(item.visual_representation())
@@ -134,7 +112,7 @@ class SelectedDepartmentMenuView(View):
         print(user_input)
 
     def get_user_input(self):
-        return input("Select item")
+        return input("Enter command:\n")
 
     def show_error(self):
         pass

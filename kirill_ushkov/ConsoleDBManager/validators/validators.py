@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from ..models.menu_item import Command
 from .errors import CommandSyntaxError, CommandMismatchError, TooShortDepartmentNameError
 
 
@@ -10,37 +9,16 @@ class Validator(ABC):
         pass
 
 
-class AddNewDepartmentCommandValidator(Validator):
-
-    def __init__(self):
-        self.minimumDepNameLength = 2
+class CommandValidator(Validator):
+    def __init__(self, command_type):
+        self.command_type = command_type
 
     def validate(self, string):
         commands = string.split()
-
         if len(commands) < 2 or len(commands) > 2:
             raise CommandSyntaxError
 
-        if commands[0] == Command.ADD_DEPARTMENT.value:
-            dep_name = commands[1]
-            if len(dep_name) < self.minimumDepNameLength:
-                raise TooShortDepartmentNameError
-            return dep_name
-        else:
-            raise CommandMismatchError
-
-
-class SelectDepartmentCommandValidator(Validator):
-    def validate(self, string):
-        commands = string.split()
-
-        if len(commands) < 2 or len(commands) > 2:
-            raise CommandSyntaxError
-
-        if commands[0] == Command.SELECT_DEPARTMENT.value:
-            dep_name = commands[1]
-            if len(dep_name) < 2:
-                raise TooShortDepartmentNameError
-            return dep_name
+        if commands[0] == self.command_type.value:
+            return commands[0]
         else:
             raise CommandMismatchError
