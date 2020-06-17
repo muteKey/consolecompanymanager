@@ -109,10 +109,34 @@ class SelectedDepartmentMenuView(View):
             print(item.visual_representation())
 
     def handle_user_input(self, user_input):
-        print(user_input)
+        emp = self.controller.dbController.get_employees_for_department(4)
+        for e in emp:
+            print(e)
+        # view = ListEmployeesView(self.department, emp)
+        # self.controller.transition_to(view)
 
     def get_user_input(self):
         return input("Enter command:\n")
+
+    def show_error(self):
+        pass
+
+
+class ListEmployeesView(View):
+    def __init__(self, department, employees):
+        self.department = department
+        self.employees = employees
+
+    def start(self):
+        print("List of employees in {} department".format(self.department.name))
+        for emp in self.employees:
+            print(emp)
+
+    def handle_user_input(self, user_input):
+        pass
+
+    def get_user_input(self):
+        pass
 
     def show_error(self):
         pass

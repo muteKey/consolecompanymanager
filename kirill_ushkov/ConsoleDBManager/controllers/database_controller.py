@@ -2,6 +2,7 @@ import sqlite3
 from contextlib import closing
 from ..models.menu_item import MenuItem
 from ..models.department import Department
+from ..models.employee import Employee
 import csv
 import os
 
@@ -199,6 +200,20 @@ class DatabaseController:
                 row = cursor.fetchone()
                 return Department(row[0], row[1])
 
+    def get_employees_for_department(self, dep_id):
+        query = """
+            SELECT * FROM employee WHERE department_id=?;
+        """
+        conn = self.get_connection()
+        with closing(conn):
+            with conn:
+                cursor = self.get_connection().cursor()
+                cursor.execute(query, (dep_id,))
+                employees = []
+                for row in cursor.fetchall():
+                    employee = Employee(row[0], row[1], row[2], row[3], row[4])
+                    employees.append(employee)
+                return employees
 
 
 
