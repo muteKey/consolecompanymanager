@@ -45,5 +45,5 @@ class View(ABC):
         pass
 
     @abstractmethod
-    def show_error(self):
+    def show_error_message(self):
         pass

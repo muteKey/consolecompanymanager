@@ -89,7 +89,6 @@ class DatabaseController:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 params = (row["first_name"], row["last_name"], row["position"], row["department_id"])
-                print(params)
                 cursor.execute(employee_fill_query, params)
                 conn.commit()
         conn.close()
@@ -206,14 +205,35 @@ class DatabaseController:
         """
         conn = self.get_connection()
         with closing(conn):
+            cursor = self.get_connection().cursor()
+            cursor.execute(query, (dep_id,))
+            employees = []
+            for row in cursor.fetchall():
+                employee = Employee(row[0], row[1], row[2], row[3], row[4])
+                employees.append(employee)
+            return employees
+
+    def add_employee(self, first_name, last_name, position, department_id):
+        query = """
+            INSERT INTO employee('first_name','last_name','position','department_id') VALUES (?,?,?,?);
+        """
+
+        conn = self.get_connection()
+        with closing(conn):
             with conn:
-                cursor = self.get_connection().cursor()
-                cursor.execute(query, (dep_id,))
-                employees = []
-                for row in cursor.fetchall():
-                    employee = Employee(row[0], row[1], row[2], row[3], row[4])
-                    employees.append(employee)
-                return employees
+                cursor = conn.cursor()
+                cursor.execute(query, (first_name, last_name, position, department_id))
+
+    def remove_employee(self, emp_id):
+        query = """
+            DELETE FROM employee WHERE id = ?;
+        """
+        conn = self.get_connection()
+        with closing(conn):
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(query, (emp_id,))
+
 
 
 

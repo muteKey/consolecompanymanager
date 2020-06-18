@@ -6,5 +6,8 @@ class Employee:
         self.position = position
         self.department_id = department_id
 
+    def visual_repr(self):
+        return "{} {} {}".format(self.first_name, self.last_name, self.position)
+
     def __str__(self):
         return "{} {} {} {}".format(self.identifier, self.first_name, self.last_name, self.position)
