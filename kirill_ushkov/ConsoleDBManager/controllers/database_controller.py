@@ -234,6 +234,17 @@ class DatabaseController:
                 cursor = conn.cursor()
                 cursor.execute(query, (emp_id,))
 
+    def edit_employee(self, emp_id, first_name, last_name, position):
+        query = """
+            UPDATE employee SET first_name = ?, last_name = ?, position = ?
+            WHERE id = ?;
+        """
+        conn = self.get_connection()
+        with closing(conn):
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(query, (first_name, last_name, position, emp_id))
+
 
 
 

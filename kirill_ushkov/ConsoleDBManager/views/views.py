@@ -2,7 +2,7 @@ from ..controllers.menu_controller import View
 from ..models.menu_item import Command
 from ..validators.validators import CommandValidator
 from ..validators.errors import CommandMismatchError, CommandSyntaxError, TooShortDepartmentNameError
-from ..parsers.command_parser import CommandParser, AddEmployeeCommandParser
+from ..parsers.command_parser import CommandParser, AddEmployeeCommandParser, EditEmployeeCommandParser
 
 
 class MenuInitialView(View):
@@ -133,14 +133,22 @@ class SelectedDepartmentMenuView(View):
                 self.controller.transition_to(view)
             elif parser.command == Command.DELETE_EMPLOYEE.value:
                 employee_id = parser.arguments[0]
-                print(employee_id)
                 self.controller.dbController.remove_employee(employee_id)
-                print("Successfully deleted employee!")
+                print("Successfully deleted employee profile!")
+            elif parser.command == Command.EDIT_EMPLOYEE.value:
+                command_parser = EditEmployeeCommandParser(user_input)
+                command_parser.parse()
+                self.controller.dbController.edit_employee(command_parser.identifier,
+                                                           command_parser.first_name,
+                                                           command_parser.last_name,
+                                                           command_parser.position)
+                print("Successfully updated employee profile!")
+
         except CommandSyntaxError:
             self.show_error_message()
 
     def get_user_input(self):
-        return input("Enter command:\n").lower().strip()
+        return input("Enter command:\n").strip()
 
     def show_error_message(self):
         print("Incorrect syntax!")
