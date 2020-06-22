@@ -5,16 +5,29 @@ from ..models.department import Department
 from ..models.employee import Employee
 import csv
 import os
+import logging
 
 
 class DatabaseController:
     def __init__(self):
         self.__db_name = "company.db"
+
+        log_file_name = "app.log"
+        self.__logger = logging.getLogger(log_file_name)
+        self.__logger.setLevel(logging.INFO)
+
+        file_handler = logging.FileHandler(log_file_name)
+        formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(name)s : %(message)s')
+        file_handler.setFormatter(formatter)
+        self.__logger.addHandler(file_handler)
         self.create_db_if_needed()
 
     def create_db_if_needed(self):
         if self.check_db_exists():
+            self.__logger.info("Database already exists")
             return
+
+        self.__logger.info("Database does not exist")
 
         create_menu_query = """
             CREATE TABLE IF NOT EXISTS menu_item(
@@ -45,10 +58,14 @@ class DatabaseController:
 
         conn = self.get_connection()
         queries = [create_menu_query, create_dep_query, create_employee_query]
-        with closing(conn):
-            with conn:
-                for query in queries:
-                    conn.execute(query)
+        try:
+            with closing(conn):
+                with conn:
+                    for query in queries:
+                        conn.execute(query)
+        except sqlite3.Error:
+            self.__logger.exception("Problem with creating database tables")
+
         self.fill_menu_table()
         self.fill_dep_table()
         self.fill_employee_table()
@@ -64,16 +81,23 @@ class DatabaseController:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        with open(initial_menu_file, 'r') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
-            for row in csv_reader:
-                parent_id = row["parent_id"]
-                if not parent_id:
-                    parent_id = None
-                params = (row["name"], row["description"], row["syntax"], parent_id)
-                cursor.execute(menu_create_query, params)
-                conn.commit()
-        conn.close()
+        try:
+            with open(initial_menu_file, 'r') as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                for row in csv_reader:
+                    parent_id = row["parent_id"]
+                    if not parent_id:
+                        parent_id = None
+                    params = (row["name"], row["description"], row["syntax"], parent_id)
+                    cursor.execute(menu_create_query, params)
+                    conn.commit()
+            conn.close()
+        except sqlite3.Error:
+            self.__logger.exception("Filling menu table problem")
+        except csv.Error:
+            self.__logger.exception("Menu csv file reading problem")
+        finally:
+            conn.close()
 
     def fill_employee_table(self):
         employee_fill_query = """
@@ -84,14 +108,20 @@ class DatabaseController:
 
         conn = self.get_connection()
         cursor = conn.cursor()
-
-        with open(initial_menu_file, 'r') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
-            for row in csv_reader:
-                params = (row["first_name"], row["last_name"], row["position"], row["department_id"])
-                cursor.execute(employee_fill_query, params)
-                conn.commit()
-        conn.close()
+        try:
+            with open(initial_menu_file, 'r') as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                for row in csv_reader:
+                    params = (row["first_name"], row["last_name"], row["position"], row["department_id"])
+                    cursor.execute(employee_fill_query, params)
+                    conn.commit()
+            conn.close()
+        except sqlite3.Error:
+            self.__logger.exception("Filling employee table problem")
+        except csv.Error:
+            self.__logger.exception("Employee csv file reading problem")
+        finally:
+            conn.close()
 
     def fill_dep_table(self):
         dep_create_query = """
@@ -102,14 +132,20 @@ class DatabaseController:
 
         conn = self.get_connection()
         cursor = conn.cursor()
-
-        with open(initial_deps_file, 'r') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
-            for row in csv_reader:
-                params = (row["name"],)
-                cursor.execute(dep_create_query, params)
-                conn.commit()
-        conn.close()
+        try:
+            with open(initial_deps_file, 'r') as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                for row in csv_reader:
+                    params = (row["name"],)
+                    cursor.execute(dep_create_query, params)
+                    conn.commit()
+            conn.close()
+        except sqlite3.Error:
+            self.__logger.exception("Filling departments table problem")
+        except csv.Error:
+            self.__logger.exception("Departments csv file reading problem")
+        finally:
+            conn.close()
 
     def check_db_exists(self):
         return os.path.exists(self.__db_name)
@@ -147,6 +183,7 @@ class DatabaseController:
         if row is not None:
             item = MenuItem(row[0], row[1], row[2], row[3], row[4])
             return item
+        self.__logger.info("No menu command found with name {}".format(command_name))
         return None
 
     def get_child_menu_items(self, menu_item_id):
@@ -182,10 +219,14 @@ class DatabaseController:
             INSERT INTO department('name') VALUES (?);
         """
         conn = self.get_connection()
-
-        with closing(conn):
-            with conn:
-                conn.execute(query, (dep_name,))
+        try:
+            with closing(conn):
+                with conn:
+                    conn.execute(query, (dep_name,))
+        except sqlite3.Error:
+            self.__logger.exception("Insert department problem")
+        finally:
+            conn.close()
 
     def get_department_by_name(self, dep_name):
         query = """
@@ -197,6 +238,9 @@ class DatabaseController:
                 cursor = self.get_connection().cursor()
                 cursor.execute(query, (dep_name,))
                 row = cursor.fetchone()
+                if row is None:
+                    self.__logger.debug("Department with name {} not found".format(dep_name))
+                    return None
                 return Department(row[0], row[1])
 
     def get_employees_for_department(self, dep_id):
@@ -219,20 +263,30 @@ class DatabaseController:
         """
 
         conn = self.get_connection()
-        with closing(conn):
-            with conn:
-                cursor = conn.cursor()
-                cursor.execute(query, (first_name, last_name, position, department_id))
+        try:
+            with closing(conn):
+                with conn:
+                    cursor = conn.cursor()
+                    cursor.execute(query, (first_name, last_name, position, department_id))
+        except sqlite3.Error:
+            self.__logger.exception("Insert employee problem")
+        finally:
+            conn.close()
 
-    def remove_employee(self, emp_id):
+    def remove_employee(self, emp_id, department_id):
         query = """
-            DELETE FROM employee WHERE id = ?;
+            DELETE FROM employee WHERE id = ? AND department_id = ?;
         """
         conn = self.get_connection()
-        with closing(conn):
-            with conn:
-                cursor = conn.cursor()
-                cursor.execute(query, (emp_id,))
+        try:
+            with closing(conn):
+                with conn:
+                    cursor = conn.cursor()
+                    cursor.execute(query, (emp_id, department_id))
+        except sqlite3.Error:
+            self.__logger.exception("Delete employee problem")
+        finally:
+            conn.close()
 
     def edit_employee(self, emp_id, first_name, last_name, position):
         query = """
@@ -240,16 +294,12 @@ class DatabaseController:
             WHERE id = ?;
         """
         conn = self.get_connection()
-        with closing(conn):
-            with conn:
-                cursor = conn.cursor()
-                cursor.execute(query, (first_name, last_name, position, emp_id))
-
-
-
-
-
-
-
-
-
+        try:
+            with closing(conn):
+                with conn:
+                    cursor = conn.cursor()
+                    cursor.execute(query, (first_name, last_name, position, emp_id))
+        except sqlite3.Error:
+            self.__logger.exception("Update employee problem")
+        finally:
+            conn.close()

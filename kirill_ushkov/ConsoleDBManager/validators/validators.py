@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .errors import CommandSyntaxError, CommandMismatchError, TooShortDepartmentNameError
+from .errors import InputError
 
 
 class Validator(ABC):
@@ -16,9 +16,9 @@ class CommandValidator(Validator):
     def validate(self, string):
         commands = string.split()
         if len(commands) < 2 or len(commands) > 2:
-            raise CommandSyntaxError
+            raise InputError("Too many arguments","Command expects 2 arguments")
 
         if commands[0] == self.command_type.value:
             return commands[0]
         else:
-            raise CommandMismatchError
+            raise InputError("Unrecognized command", "")

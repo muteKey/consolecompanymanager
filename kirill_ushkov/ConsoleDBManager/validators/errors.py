@@ -2,15 +2,14 @@ class Error(Exception):
     pass
 
 
-class CommandSyntaxError(Error):
-    pass
+class InputError(Error):
+    """Exception raised for errors in the input.
 
+    Attributes:
+        expression -- input expression in which the error occurred
+        message -- explanation of the error
+    """
 
-class CommandMismatchError(Error):
-    pass
-
-
-class TooShortDepartmentNameError(Error):
-    pass
-
-
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message

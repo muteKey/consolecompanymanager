@@ -1,14 +1,24 @@
 from ..controllers.menu_controller import View
 from ..models.menu_item import Command
 from ..validators.validators import CommandValidator
-from ..validators.errors import CommandMismatchError, CommandSyntaxError, TooShortDepartmentNameError
+from ..validators.errors import InputError
 from ..parsers.command_parser import CommandParser, AddEmployeeCommandParser, EditEmployeeCommandParser
+import logging
+
+log_file_name = "app.log"
+logger = logging.getLogger(log_file_name)
+logger.setLevel(logging.INFO)
+
+file_handler = logging.FileHandler(log_file_name)
+formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(name)s : %(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 
 class MenuInitialView(View):
 
     def start(self):
-        print("Welcome to Console Company Manager!")
+        print("--------------------")
         menu_items = self.controller.dbController.get_initial_menu_items()
         for command in menu_items:
             print(command.visual_representation())
@@ -22,23 +32,37 @@ class MenuInitialView(View):
             parser = CommandParser(user_input)
             parser.parse()
             menu_item = self.controller.dbController.get_selected_menu_item(parser.command)
-            if menu_item.name == Command.LIST_DEPARTMENT.value:
+            if menu_item is None:
+                self.show_error_message()
+            elif menu_item.name == Command.LIST_DEPARTMENT.value:
                 view = DepartmentListView()
                 self.controller.transition_to(view)
+                logger.info("List department command selected")
             elif menu_item.name == Command.ADD_DEPARTMENT.value:
                 view = AddNewDepartmentView(menu_item)
                 self.controller.transition_to(view)
+                logger.info("Add department command selected")
             elif menu_item.name == Command.SELECT_DEPARTMENT.value:
                 if len(parser.arguments) == 0:
-                    raise CommandSyntaxError
+                    logger.error("Incorrect select department arguments")
+                    raise InputError("Name argument not found", "Please enter department name")
+
                 department = self.controller.dbController.get_department_by_name(parser.arguments[0])
+                if department is None:
+                    message = "No department with this name".format(parser.arguments[0])
+                    print(message)
+                    logger.info(message)
+                    return
                 view = SelectedDepartmentMenuView(menu_item, department)
+                logger.info("Choose department command selected")
                 self.controller.transition_to(view)
-        except CommandSyntaxError:
-            self.show_error_message()
+        except InputError as error:
+            print(error.expression)
+            print(error.message)
+            logger.error("Initial menu error")
 
     def show_error_message(self):
-        print("Unrecognized command error")
+        print("Unrecognized command! Please try again.")
 
 
 class DepartmentListView(View):
@@ -53,6 +77,7 @@ class DepartmentListView(View):
         if user_input == "b":
             view = MenuInitialView()
             self.controller.transition_to(view)
+            logger.info("Back to initial menu from department list")
         else:
             self.show_error_message()
 
@@ -82,14 +107,11 @@ class AddNewDepartmentView(View):
             print("Successfully added new department!")
             view = MenuInitialView()
             self.controller.transition_to(view)
-        except TooShortDepartmentNameError:
-            print("Name of department is too short! Please try again")
-            print()
-        except CommandMismatchError:
-            print("Please check your syntax. Seems like incorrect command entered")
-            print()
-        except CommandSyntaxError:
-            print("Please check command syntax")
+            logger.info("Back to initial menu from add department")
+        except InputError as err:
+            print(err.expression)
+            print(err.message)
+            logger.error("AddNewDepartmentView: {}".format(err.expression))
 
     def get_user_input(self):
         return input("Enter command:\n")
@@ -117,10 +139,12 @@ class SelectedDepartmentMenuView(View):
             parser.parse()
 
             if parser.command == Command.LIST_EMPLOYEE.value:
+                logger.info("List employee command selected")
                 employees = self.controller.dbController.get_employees_for_department(self.department.identifier)
                 view = ListEmployeesView(employees, self.department, self.parent_menu_item)
                 self.controller.transition_to(view)
             elif parser.command == Command.ADD_EMPLOYEE.value:
+                logger.info("Add employee command selected")
                 command_parser = AddEmployeeCommandParser(user_input)
                 command_parser.parse()
                 self.controller.dbController.add_employee(command_parser.first_name,
@@ -129,11 +153,13 @@ class SelectedDepartmentMenuView(View):
                                                           self.department.identifier)
                 print("Successfully added employee!")
             elif parser.command == Command.BACK.value:
+                logger.info("Back to initial from selected department")
                 view = MenuInitialView()
                 self.controller.transition_to(view)
             elif parser.command == Command.DELETE_EMPLOYEE.value:
+                logger.info("Delete employee command selected")
                 employee_id = parser.arguments[0]
-                self.controller.dbController.remove_employee(employee_id)
+                self.controller.dbController.remove_employee(employee_id, self.department.identifier)
                 print("Successfully deleted employee profile!")
             elif parser.command == Command.EDIT_EMPLOYEE.value:
                 command_parser = EditEmployeeCommandParser(user_input)
@@ -143,15 +169,18 @@ class SelectedDepartmentMenuView(View):
                                                            command_parser.last_name,
                                                            command_parser.position)
                 print("Successfully updated employee profile!")
-
-        except CommandSyntaxError:
-            self.show_error_message()
+            else:
+                self.show_error_message()
+        except InputError as error:
+            print(error.expression)
+            print(error.message)
+            logger.error("SelectedDepartmentMenuView: {}".format(error.expression))
 
     def get_user_input(self):
         return input("Enter command:\n").strip()
 
     def show_error_message(self):
-        print("Incorrect syntax!")
+        print("Unrecognized command!\n")
 
 
 class ListEmployeesView(View):
@@ -167,6 +196,7 @@ class ListEmployeesView(View):
 
     def handle_user_input(self, user_input):
         if user_input == "b":
+            logger.info("Back to selected view from employees list")
             view = SelectedDepartmentMenuView(self.parent_menu, self.department)
             self.controller.transition_to(view)
 
