@@ -5,29 +5,23 @@ from ..models.department import Department
 from ..models.employee import Employee
 import csv
 import os
-import logging
+from ..logger.app_logger import ApplicationLogger
+
+logger = ApplicationLogger().get_logger()
 
 
 class DatabaseController:
     def __init__(self):
         self.__db_name = "company.db"
 
-        log_file_name = "app.log"
-        self.__logger = logging.getLogger(log_file_name)
-        self.__logger.setLevel(logging.INFO)
-
-        file_handler = logging.FileHandler(log_file_name)
-        formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(name)s : %(message)s')
-        file_handler.setFormatter(formatter)
-        self.__logger.addHandler(file_handler)
         self.create_db_if_needed()
 
     def create_db_if_needed(self):
         if self.check_db_exists():
-            self.__logger.info("Database already exists")
+            logger.info("Database already exists")
             return
 
-        self.__logger.info("Database does not exist")
+        logger.info("Database does not exist")
 
         create_menu_query = """
             CREATE TABLE IF NOT EXISTS menu_item(
@@ -64,7 +58,7 @@ class DatabaseController:
                     for query in queries:
                         conn.execute(query)
         except sqlite3.Error:
-            self.__logger.exception("Problem with creating database tables")
+            logger.exception("Problem with creating database tables")
 
         self.fill_menu_table()
         self.fill_dep_table()
@@ -93,9 +87,9 @@ class DatabaseController:
                     conn.commit()
             conn.close()
         except sqlite3.Error:
-            self.__logger.exception("Filling menu table problem")
+            logger.exception("Filling menu table problem")
         except csv.Error:
-            self.__logger.exception("Menu csv file reading problem")
+            logger.exception("Menu csv file reading problem")
         finally:
             conn.close()
 
@@ -117,9 +111,9 @@ class DatabaseController:
                     conn.commit()
             conn.close()
         except sqlite3.Error:
-            self.__logger.exception("Filling employee table problem")
+            logger.exception("Filling employee table problem")
         except csv.Error:
-            self.__logger.exception("Employee csv file reading problem")
+            logger.exception("Employee csv file reading problem")
         finally:
             conn.close()
 
@@ -141,9 +135,9 @@ class DatabaseController:
                     conn.commit()
             conn.close()
         except sqlite3.Error:
-            self.__logger.exception("Filling departments table problem")
+            logger.exception("Filling departments table problem")
         except csv.Error:
-            self.__logger.exception("Departments csv file reading problem")
+            logger.exception("Departments csv file reading problem")
         finally:
             conn.close()
 
@@ -183,7 +177,7 @@ class DatabaseController:
         if row is not None:
             item = MenuItem(row[0], row[1], row[2], row[3], row[4])
             return item
-        self.__logger.info("No menu command found with name {}".format(command_name))
+        logger.info("No menu command found with name {}".format(command_name))
         return None
 
     def get_child_menu_items(self, menu_item_id):
@@ -224,7 +218,7 @@ class DatabaseController:
                 with conn:
                     conn.execute(query, (dep_name,))
         except sqlite3.Error:
-            self.__logger.exception("Insert department problem")
+            logger.exception("Insert department problem")
         finally:
             conn.close()
 
@@ -239,7 +233,7 @@ class DatabaseController:
                 cursor.execute(query, (dep_name,))
                 row = cursor.fetchone()
                 if row is None:
-                    self.__logger.debug("Department with name {} not found".format(dep_name))
+                    logger.debug("Department with name {} not found".format(dep_name))
                     return None
                 return Department(row[0], row[1])
 
@@ -269,7 +263,7 @@ class DatabaseController:
                     cursor = conn.cursor()
                     cursor.execute(query, (first_name, last_name, position, department_id))
         except sqlite3.Error:
-            self.__logger.exception("Insert employee problem")
+            logger.exception("Insert employee problem")
         finally:
             conn.close()
 
@@ -284,7 +278,7 @@ class DatabaseController:
                     cursor = conn.cursor()
                     cursor.execute(query, (emp_id, department_id))
         except sqlite3.Error:
-            self.__logger.exception("Delete employee problem")
+            logger.exception("Delete employee problem")
         finally:
             conn.close()
 
@@ -300,6 +294,6 @@ class DatabaseController:
                     cursor = conn.cursor()
                     cursor.execute(query, (first_name, last_name, position, emp_id))
         except sqlite3.Error:
-            self.__logger.exception("Update employee problem")
+            logger.exception("Update employee problem")
         finally:
             conn.close()

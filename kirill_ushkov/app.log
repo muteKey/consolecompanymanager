@@ -1,6 +1,16 @@
-2020-06-22 19:25:01,310 : INFO : app.log : Database already exists
-2020-06-22 19:25:01,310 : INFO : app.log : Database already exists
-2020-06-22 19:25:06,292 : INFO : app.log : List department command selected
-2020-06-22 19:25:06,292 : INFO : app.log : List department command selected
-2020-06-22 19:25:08,375 : INFO : app.log : Back to initial menu from department list
-2020-06-22 19:25:08,375 : INFO : app.log : Back to initial menu from department list
+2020-06-24 12:27:03,445 : INFO : app.log : Database already exists
+2020-06-24 12:27:09,429 : INFO : app.log : Choose department command selected
+2020-06-24 12:27:13,258 : INFO : app.log : List employee command selected
+2020-06-24 12:27:15,704 : INFO : app.log : Back to selected view from employees list
+2020-06-24 12:27:56,687 : INFO : app.log : Add employee command selected
+2020-06-24 12:28:01,880 : INFO : app.log : List employee command selected
+2020-06-24 12:28:03,661 : INFO : app.log : Back to selected view from employees list
+2020-06-24 12:28:45,774 : INFO : app.log : Database already exists
+2020-06-24 12:28:53,718 : INFO : app.log : No department with this name
+2020-06-24 12:29:05,969 : INFO : app.log : Add department command selected
+2020-06-24 12:29:21,864 : ERROR : app.log : AddNewDepartmentView: Too many arguments
+2020-06-24 12:45:28,486 : INFO : app.log : Database already exists
+2020-06-24 12:45:37,643 : ERROR : app.log : Initial menu error
+2020-06-24 12:45:51,752 : INFO : app.log : Add department command selected
+2020-06-24 12:45:57,845 : INFO : app.log : List department command selected
+2020-06-24 12:46:01,289 : INFO : app.log : Back to initial menu from department list

@@ -1,4 +1,4 @@
-from ..validators.errors import InputError
+from ConsoleDBManager.parsers.errors import InputError
 from abc import ABC, abstractmethod
 import re
 
@@ -21,6 +21,24 @@ class CommandParser(Parser):
             raise InputError("No arguments specified", "Command expects more arguments")
         self.command = commands[0]
         self.arguments = commands[1:]
+
+
+class AddNewDepartmentCommandParser(Parser):
+    def __init__(self, user_input):
+        self.user_input = user_input
+        self.number_of_arguments = 1
+        self.department_name = ""
+
+    def parse(self):
+        components = self.user_input.split()
+        components.pop(0)
+        if len(components) == 0 or len(components) > self.number_of_arguments:
+            raise InputError("Incorrect number of arguments", "Not all arguments added")
+        department_name_pattern = re.compile("[A-Za-z]{2,25}")
+        is_correct = bool(department_name_pattern.match(components[0]))
+        if not is_correct:
+            raise InputError("Incorrect deparment name", "Department name should contain only letters")
+        self.department_name = components[0]
 
 
 class AddEmployeeCommandParser(Parser):

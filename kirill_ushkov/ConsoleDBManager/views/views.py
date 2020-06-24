@@ -1,18 +1,11 @@
 from ..controllers.menu_controller import View
 from ..models.menu_item import Command
-from ..validators.validators import CommandValidator
-from ..validators.errors import InputError
-from ..parsers.command_parser import CommandParser, AddEmployeeCommandParser, EditEmployeeCommandParser
-import logging
+from ConsoleDBManager.parsers.errors import InputError
+from ..parsers.command_parser import CommandParser, AddEmployeeCommandParser, EditEmployeeCommandParser, AddNewDepartmentCommandParser
 
-log_file_name = "app.log"
-logger = logging.getLogger(log_file_name)
-logger.setLevel(logging.INFO)
+from ..logger.app_logger import ApplicationLogger
 
-file_handler = logging.FileHandler(log_file_name)
-formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(name)s : %(message)s')
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
+logger = ApplicationLogger().get_logger()
 
 
 class MenuInitialView(View):
@@ -39,8 +32,10 @@ class MenuInitialView(View):
                 self.controller.transition_to(view)
                 logger.info("List department command selected")
             elif menu_item.name == Command.ADD_DEPARTMENT.value:
-                view = AddNewDepartmentView(menu_item)
-                self.controller.transition_to(view)
+                parser = AddNewDepartmentCommandParser(user_input)
+                parser.parse()
+                self.controller.dbController.add_department(parser.department_name)
+                print("Successfully added new department!")
                 logger.info("Add department command selected")
             elif menu_item.name == Command.SELECT_DEPARTMENT.value:
                 if len(parser.arguments) == 0:
@@ -87,37 +82,6 @@ class DepartmentListView(View):
 
     def show_error_message(self):
         print("Sorry, did not understand you, please try again")
-
-
-class AddNewDepartmentView(View):
-    def __init__(self, menu_item):
-        self.menu_item = menu_item
-
-    def start(self):
-        print(self.menu_item.description)
-        print("Command syntax: {}".format(self.menu_item.syntax))
-
-    def handle_user_input(self, user_input):
-        cleared = user_input.strip()
-        try:
-            validator = CommandValidator(Command.ADD_DEPARTMENT)
-            dep_name = validator.validate(cleared)
-            self.controller.dbController.add_department(dep_name)
-
-            print("Successfully added new department!")
-            view = MenuInitialView()
-            self.controller.transition_to(view)
-            logger.info("Back to initial menu from add department")
-        except InputError as err:
-            print(err.expression)
-            print(err.message)
-            logger.error("AddNewDepartmentView: {}".format(err.expression))
-
-    def get_user_input(self):
-        return input("Enter command:\n")
-
-    def show_error_message(self):
-        print("Incorrect command syntax!")
 
 
 class SelectedDepartmentMenuView(View):
