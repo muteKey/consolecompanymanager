@@ -1,12 +1,14 @@
 from ..controllers.menu_controller import View
 from ..models.menu_item import Command
 from ConsoleDBManager.parsers.errors import InputError
-from ..parsers.command_parser import CommandParser, AddEmployeeCommandParser, EditEmployeeCommandParser, AddNewDepartmentCommandParser
+from ..parsers.command_parser import CommandParser,\
+    AddEmployeeCommandParser,\
+    EditEmployeeCommandParser,\
+    AddNewDepartmentCommandParser
+import logging
 
-from ..logger.app_logger import ApplicationLogger
-
-logger = ApplicationLogger().get_logger()
-
+logger = logging.getLogger(__name__)
+print(logger.name)
 
 class MenuInitialView(View):
 
@@ -74,6 +76,7 @@ class DepartmentListView(View):
             self.controller.transition_to(view)
             logger.info("Back to initial menu from department list")
         else:
+            logger.error("Not correct exit input")
             self.show_error_message()
 
     def get_user_input(self):
@@ -163,6 +166,9 @@ class ListEmployeesView(View):
             logger.info("Back to selected view from employees list")
             view = SelectedDepartmentMenuView(self.parent_menu, self.department)
             self.controller.transition_to(view)
+        else:
+            self.show_error_message()
+            logger.error("ListEmployeesView Not correct exit input")
 
     def get_user_input(self):
         user_input = input("Press B to return to previous menu:\n")

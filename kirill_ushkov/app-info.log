@@ -1,0 +1,8 @@
+2020-06-26 12:57:07,326 ConsoleDBManager.controllers.database_controller INFO     MainProcess Database already exists
+2020-06-26 12:57:15,731 ConsoleDBManager.views.views INFO     MainProcess List department command selected
+2020-06-26 12:57:17,431 ConsoleDBManager.views.views ERROR    MainProcess Not correct exit input
+2020-06-26 12:57:18,243 ConsoleDBManager.views.views INFO     MainProcess Back to initial menu from department list
+2020-06-26 12:57:22,985 ConsoleDBManager.controllers.database_controller INFO     MainProcess No menu command found with name select_deglsdfkj
+2020-06-26 12:57:27,772 ConsoleDBManager.views.views INFO     MainProcess Choose department command selected
+2020-06-26 12:57:31,207 ConsoleDBManager.views.views INFO     MainProcess List employee command selected
+2020-06-26 12:57:32,556 ConsoleDBManager.views.views INFO     MainProcess Back to selected view from employees list

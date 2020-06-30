@@ -32,12 +32,12 @@ class AddNewDepartmentCommandParser(Parser):
     def parse(self):
         components = self.user_input.split()
         components.pop(0)
-        if len(components) == 0 or len(components) > self.number_of_arguments:
+        if len(components) != self.number_of_arguments:
             raise InputError("Incorrect number of arguments", "Not all arguments added")
         department_name_pattern = re.compile("[A-Za-z]{2,25}")
         is_correct = bool(department_name_pattern.match(components[0]))
         if not is_correct:
-            raise InputError("Incorrect deparment name", "Department name should contain only letters")
+            raise InputError("Incorrect department name", "Department name should contain only letters")
         self.department_name = components[0]
 
 
@@ -52,8 +52,9 @@ class AddEmployeeCommandParser(Parser):
     def parse(self):
         components = self.user_input.split()
         components.pop(0)
-        if len(components) == 0 or len(components) > self.number_of_arguments:
-            raise InputError("Incorrect number of arguments", "Not all arguments added")
+        if len(components) != self.number_of_arguments:
+            raise InputError("Incorrect number of arguments",
+                             "Command expects {} arguments".format(self.number_of_arguments))
 
         first_name_pattern = re.compile("[A-Za-z]{2,25}")
         is_correct_first_name = bool(first_name_pattern.match(components[1]))
@@ -86,9 +87,9 @@ class EditEmployeeCommandParser(Parser):
     def parse(self):
         components = self.user_input.split()
         components.pop(0)
-        if len(components) == 0 or len(components) > self.number_of_arguments:
-            raise InputError("Incorrect number of arguments", "Not all arguments added")
-
+        if len(components) != self.number_of_arguments:
+            raise InputError("Incorrect number of arguments",
+                             "Command expects {} arguments".format(self.number_of_arguments))
         try:
             self.identifier = int(components[0])
         except ValueError:

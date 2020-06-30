@@ -5,15 +5,16 @@ from ..models.department import Department
 from ..models.employee import Employee
 import csv
 import os
-from ..logger.app_logger import ApplicationLogger
+import logging
 
-logger = ApplicationLogger().get_logger()
+logger = logging.getLogger(__name__)
 
+
+print(logger.name)
 
 class DatabaseController:
     def __init__(self):
         self.__db_name = "company.db"
-
         self.create_db_if_needed()
 
     def create_db_if_needed(self):
